@@ -48,19 +48,19 @@ from langchain_community.embeddings import HuggingFaceEmbeddings
 load_dotenv()
 
 
-# Custom native wrapper wrapper class to completely satisfy LlamaIndex type checker
+# Custom native wrapper class to completely satisfy LlamaIndex type checker
 class NativeAdapterEmbedding(BaseEmbedding):
-    _lc_embeddings: Any = Field(default=None)
+    lc_embeddings: Any = Field(default=None, description="LangChain embedding instance")
 
     def __init__(self, lc_embeddings: Any, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self._lc_embeddings = lc_embeddings
+        # Pass variables as named fields to satisfy the Pydantic parser constructor
+        super().__init__(lc_embeddings=lc_embeddings, **kwargs)
 
     def _get_query_embedding(self, query: str) -> List[float]:
-        return self._lc_embeddings.embed_query(query)
+        return self.lc_embeddings.embed_query(query)
 
     def _get_text_embedding(self, text: str) -> List[float]:
-        return self._lc_embeddings.embed_documents([text])[0]
+        return self.lc_embeddings.embed_documents([text])[0]
 
     async def _get_query_embedding_async(self, query: str) -> List[float]:
         return self._get_query_embedding(query)
@@ -78,7 +78,7 @@ langchain_embed = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-# Wrap the LangChain instance into our custom adapter structure
+# Wrap the LangChain instance into our custom adapter structure without leading underscores
 embed_model = NativeAdapterEmbedding(
     lc_embeddings=langchain_embed, model_name="all-MiniLM-L6-v2"
 )
