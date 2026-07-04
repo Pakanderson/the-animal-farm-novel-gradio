@@ -2,33 +2,35 @@ import os
 import gradio as gr
 from dotenv import load_dotenv
 
-# LlamaIndex Imports
+# LlamaIndex Core Imports
+from llama_index.core import StorageContext, load_index_from_storage, Settings
 from llama_index.llms.groq import Groq
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import StorageContext, load_index_from_storage
 from llama_index.core.chat_engine import ContextChatEngine
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+
+# LangChain Community Embedding Wrapper (Bypasses the LlamaIndex conflict loop)
+from langchain_community.embeddings import HuggingFaceEmbeddings
 
 load_dotenv()
 
 # --- 1. Initialize RAG Backend ---
 model = "llama-3.3-70b-versatile"
 
-# Look for GROQ_API_KEY securely from environment variables
+# Secure API token acquisition
 groq_key = os.getenv("GROQ_API_KEY") or os.getenv("GROQ_API_KEY ")
 llm = Groq(model=model, token=groq_key)
 
-embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-embeddings_folder = "./embedding_model/"
+# Initialize standard universal embedding engine wrapper
+embed_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-embeddings = HuggingFaceEmbedding(
-    model_name=embedding_model, cache_folder=embeddings_folder
-)
+# Assign components to LlamaIndex Settings global workspace configurations
+Settings.llm = llm
+Settings.embed_model = embed_model
 
-# Load the local index folder you see in your file tree
+# Load your local vector registry maps safely
 storage_context = StorageContext.from_defaults(persist_dir="vector_index")
-vector_index = load_index_from_storage(storage_context, embed_model=embeddings)
+vector_index = load_index_from_storage(storage_context)
 retriever = vector_index.as_retriever(similarity_top_k=2)
 
 prefix_messages = [
@@ -55,13 +57,19 @@ rag_bot = ContextChatEngine(
 # --- 2. Gradio Interaction Callback ---
 def custom_rag_bot_callback(message, history, top_k_value):
     rag_bot._retriever._similarity_top_k = int(top_k_value)
-
     rag_bot.reset()
-    print(history)
 
-    bot_history = [
-        ChatMessage(role=m["role"], content=m["content"][0]["text"]) for m in history
-    ]
+    bot_history = []
+    for m in history:
+        # Prevent errors from reading greeting strings format variations
+        if isinstance(m, dict) and "content" in m:
+            content_text = m["content"]
+            if isinstance(content_text, list) and len(content_text) > 0:
+                content_text = content_text[0].get("text", "")
+            bot_history.append(ChatMessage(role=m["role"], content=str(content_text)))
+        elif isinstance(m, (list, tuple)) and len(m) == 2:
+            bot_history.append(ChatMessage(role="user", content=str(m[0])))
+            bot_history.append(ChatMessage(role="assistant", content=str(m[1])))
 
     response = rag_bot.chat(message, chat_history=bot_history)
 
@@ -92,6 +100,7 @@ with gr.Blocks(title="Animal Farm Novel Analyzer") as demo_custom:
 
         with gr.Column(scale=4):
             chatbot = gr.Chatbot(
+                type="messages",
                 label="Orwellian Insights Engine",
                 height=500,
                 value=[
