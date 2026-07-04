@@ -62,8 +62,12 @@ class NativeAdapterEmbedding(BaseEmbedding):
     def _get_text_embedding(self, text: str) -> List[float]:
         return self.lc_embeddings.embed_documents([text])[0]
 
-    async def _get_query_embedding_async(self, query: str) -> List[float]:
+    # Implement both required abstract async interface definitions
+    async def _aget_query_embedding(self, query: str) -> List[float]:
         return self._get_query_embedding(query)
+
+    async def _aget_text_embedding(self, text: str) -> List[float]:
+        return self._get_text_embedding(text)
 
 
 # --- 1. Initialize RAG Backend ---
@@ -78,7 +82,7 @@ langchain_embed = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 
-# Wrap the LangChain instance into our custom adapter structure without leading underscores
+# Wrap the LangChain instance into our custom adapter structure
 embed_model = NativeAdapterEmbedding(
     lc_embeddings=langchain_embed, model_name="all-MiniLM-L6-v2"
 )
