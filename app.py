@@ -24,27 +24,24 @@ def install_packages():
 install_packages()
 
 # ==========================================
-# NOW your standard imports continue safely below...
+# Standard Framework Imports
 import gradio as gr
 from dotenv import load_dotenv
+
+# LlamaIndex Core & Interface Setup Elements
 from llama_index.core import StorageContext, load_index_from_storage, Settings
 from llama_index.llms.groq import Groq
 from llama_index.core.chat_engine import ContextChatEngine
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.base.llms.types import ChatMessage, MessageRole
+
+# LlamaIndex Type Adapter Bridge
+from llama_index.core.embeddings import LangchainEmbedding
+
+# LangChain Community Embedding Engine Wrapper
 from langchain_community.embeddings import HuggingFaceEmbeddings
 
 # ==========================================
-
-# LlamaIndex Core Imports
-from llama_index.core import StorageContext, load_index_from_storage, Settings
-from llama_index.llms.groq import Groq
-from llama_index.core.chat_engine import ContextChatEngine
-from llama_index.core.memory import ChatMemoryBuffer
-from llama_index.core.base.llms.types import ChatMessage, MessageRole
-
-# LangChain Community Embedding Wrapper (Bypasses the LlamaIndex conflict loop)
-from langchain_community.embeddings import HuggingFaceEmbeddings
 
 load_dotenv()
 
@@ -56,7 +53,12 @@ groq_key = os.getenv("GROQ_API_KEY") or os.getenv("GROQ_API_KEY ")
 llm = Groq(model=model, token=groq_key)
 
 # Initialize standard universal embedding engine wrapper
-embed_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+langchain_embed = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+# Wrap it in the LlamaIndex adapter class so the type assertion passes perfectly
+embed_model = LangchainEmbedding(langchain_embed)
 
 # Assign components to LlamaIndex Settings global workspace configurations
 Settings.llm = llm
