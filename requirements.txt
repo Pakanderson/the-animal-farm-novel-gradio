@@ -1,4 +1,4 @@
-llama-index
+llama-index-core
 llama-index-llms-groq
 langchain-community
 sentence-transformers
