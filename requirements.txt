@@ -1,4 +1,4 @@
-transformers==4.44.2
+transformers>=4.48.0
 llama-index-core
 llama-index-llms-groq
 llama-index-embeddings-huggingface
