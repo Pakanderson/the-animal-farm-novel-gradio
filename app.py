@@ -1,6 +1,40 @@
 import os
+import subprocess
+import sys
+
+
+# Force immediate background installations to skip dependency hell loops
+def install_packages():
+    required_libs = [
+        "llama-index-core==0.12.40",
+        "llama-index-llms-groq==0.3.2",
+        "langchain-community",
+    ]
+    for lib in required_libs:
+        try:
+            # Silent installation execution
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "--no-cache-dir", lib]
+            )
+        except Exception as e:
+            print(f"Installation skip/warning on package {lib}: {e}")
+
+
+# Run the runtime extraction engine
+install_packages()
+
+# ==========================================
+# NOW your standard imports continue safely below...
 import gradio as gr
 from dotenv import load_dotenv
+from llama_index.core import StorageContext, load_index_from_storage, Settings
+from llama_index.llms.groq import Groq
+from llama_index.core.chat_engine import ContextChatEngine
+from llama_index.core.memory import ChatMemoryBuffer
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
+from langchain_community.embeddings import HuggingFaceEmbeddings
+
+# ==========================================
 
 # LlamaIndex Core Imports
 from llama_index.core import StorageContext, load_index_from_storage, Settings
