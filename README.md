@@ -1,5 +1,5 @@
 ---
-title: Paul Wbs
+title: The Animal Farm Novel Gradio
 emoji: ⚡
 colorFrom: gray
 colorTo: blue
