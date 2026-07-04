@@ -163,7 +163,6 @@ with gr.Blocks(title="Animal Farm Novel Analyzer") as demo_custom:
 
         with gr.Column(scale=4):
             chatbot = gr.Chatbot(
-                type="messages",
                 label="Orwellian Insights Engine",
                 height=500,
                 value=[
