@@ -9,8 +9,6 @@ app_file: app.py
 pinned: false
 python_version: 3.11
 ---
-# 📋 Animal Farm App Analyzer & Testing Guide (Gradio Edition)
-
 > 🔗 **Live App Space:** [View the Live Interface on Hugging Face](https://huggingface.co/spaces/Pakanderson/the-animal-farm-novel-gradio)
 
 Welcome to the **Animal Farm RAG Application Testing Suite**! This guide is designed for colleagues...
